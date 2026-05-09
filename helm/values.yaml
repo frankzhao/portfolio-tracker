@@ -21,9 +21,9 @@ service:
 
 ingress:
   enabled: true
+  className: ""
   host: portfolio-tracker.example.com  # override with your actual hostname
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+  annotations: {}
   # tls:
   #   - secretName: portfolio-tracker-tls
   #     hosts:
