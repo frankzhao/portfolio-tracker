@@ -1,0 +1,17 @@
+Portfolio Tracker has been deployed.
+
+{{- if .Values.ingress.enabled }}
+Access the app at: http{{ if .Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.host }}
+{{- else }}
+No ingress is enabled. To access the app, run:
+  kubectl port-forward svc/{{ include "portfolio-tracker.fullname" . }} 8080:{{ .Values.service.port }}
+Then open http://localhost:8080
+{{- end }}
+
+{{- if .Values.postgres.enabled }}
+
+Database: in-cluster Postgres ({{ include "portfolio-tracker.fullname" . }}-postgres:5432)
+{{- else }}
+
+Database: external ({{ .Values.externalDatabase.host }}:{{ .Values.externalDatabase.port }})
+{{- end }}

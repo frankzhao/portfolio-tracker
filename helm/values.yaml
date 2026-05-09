@@ -1,0 +1,68 @@
+replicaCount: 1
+
+image:
+  backend:
+    repository: ghcr.io/frankzhao/portfolio-tracker/backend
+    tag: latest
+    pullPolicy: Always
+  frontend:
+    repository: ghcr.io/frankzhao/portfolio-tracker/frontend
+    tag: latest
+    pullPolicy: Always
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  host: portfolio-tracker.example.com  # override with your actual hostname
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  # tls:
+  #   - secretName: portfolio-tracker-tls
+  #     hosts:
+  #       - portfolio-tracker.example.com
+  tls: []
+
+# In-cluster Postgres — set enabled: false to use externalDatabase instead
+postgres:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "16"
+  auth:
+    database: portfolio
+    username: portfolio
+    password: changeme  # override with a strong password
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClassName: ""
+
+# Used only when postgres.enabled is false
+externalDatabase:
+  host: ""
+  port: 5432
+  database: portfolio
+  username: portfolio
+  password: ""
+
+app:
+  # Must match ingress.host so Vite's allowed-hosts check passes
+  allowedHosts: ""  # defaults to ingress.host when empty; override to set explicitly
+  # Backend address as seen by the frontend sidecar (localhost = same pod)
+  apiTarget: "http://localhost:8000"
+
+resources: {}
+  # limits:
+  #   cpu: 500m
+  #   memory: 512Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi

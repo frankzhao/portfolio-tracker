@@ -1,0 +1,10 @@
+apiVersion: v2
+name: portfolio-tracker
+description: Personal finance web app for tracking net worth and asset valuations
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - finance
+  - portfolio
+home: https://github.com/frankzhao/portfolio-tracker
