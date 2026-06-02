@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Snapshot, Asset, CashFlow, Transaction
+from models import Snapshot, Asset, Transaction
 from schemas import SnapshotCreate, SnapshotUpdate, SnapshotOut
 
 router = APIRouter(prefix="/snapshots", tags=["snapshots"])
@@ -96,13 +96,6 @@ def _write_derived_for_period(
 @router.post("/derive-cashflow")
 def derive_cashflow(period: date = Query(...), db: Session = Depends(get_db)):
     """Compute and persist per-asset derived transactions for one period. Idempotent."""
-    if db.query(CashFlow).filter(CashFlow.period == period).first():
-        db.query(Transaction).filter(
-            Transaction.date == period, Transaction.is_derived == True
-        ).delete()
-        db.commit()
-        return {"status": "skipped", "reason": "explicit cashflow exists"}
-
     assets = db.query(Asset).filter(Asset.is_active == True).all()
     active_ids = {a.id for a in assets}
     snap_index = _build_snap_index(db, active_ids, up_to=period)
@@ -127,7 +120,6 @@ def reconcile_all(db: Session = Depends(get_db)):
     snap_index = _build_snap_index(db, active_ids)
 
     all_periods = sorted({p for (_, p) in snap_index})
-    explicit_cf_periods = {cf.period for cf in db.query(CashFlow).all()}
 
     last_real_by_asset: dict[int, Decimal] = {}
     total_created = 0
@@ -137,16 +129,10 @@ def reconcile_all(db: Session = Depends(get_db)):
         if not has_new:
             continue
 
-        if period in explicit_cf_periods:
-            db.query(Transaction).filter(
-                Transaction.date == period, Transaction.is_derived == True
-            ).delete()
-        else:
-            total_created += _write_derived_for_period(
-                db, period, assets, snap_index, last_real_by_asset
-            )
+        total_created += _write_derived_for_period(
+            db, period, assets, snap_index, last_real_by_asset
+        )
 
-        # Advance last_real_by_asset regardless of whether CF is explicit
         for a in assets:
             if (a.id, period) in snap_index:
                 last_real_by_asset[a.id] = snap_index[(a.id, period)]

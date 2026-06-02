@@ -182,11 +182,17 @@ export default function Dashboard() {
           <div className="stat-sub">Since first record</div>
         </div>
         <div className="card">
-          <div className="stat-label">Last Month Net Flow</div>
-          <div className={`stat-value ${pctCls(latest?.net_flow)}`}>{fmt(latest?.net_flow, 0)}</div>
-          <div className="stat-sub">
-            Income {fmt(latest?.income, 0)} · Exp {fmt(latest?.expenses, 0)}
-          </div>
+          <div className="stat-label">Last Month Change</div>
+          {(() => {
+            const prev = history.length >= 2 ? history[history.length - 2] : null
+            const momDelta = prev != null ? Number(latest?.total_aud) - Number(prev.total_aud) : null
+            return <>
+              <div className={`stat-value ${pctCls(momDelta)}`}>{momDelta != null ? (momDelta >= 0 ? '+' : '') + fmt(momDelta, 0) : '—'}</div>
+              <div className="stat-sub">
+                Income {fmt(latest?.income, 0)} · Exp {fmt(latest?.expenses, 0)}
+              </div>
+            </>
+          })()}
         </div>
       </div>
 
